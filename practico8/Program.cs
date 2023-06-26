@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TareasApp
 {
@@ -14,114 +15,135 @@ namespace TareasApp
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Tareas a cargar: ");
-            int numTareas = Convert.ToInt32(Console.ReadLine());
+            List<Tarea> tareasPendientes = GenerarTareasPendientes(10);
 
-            List<Tarea> listaTareas = new List<Tarea>();
+            Console.WriteLine("------ Tareas Pendientes ------");
+            MostrarTareas(tareasPendientes);
 
-            for (int i = 0; i < numTareas; i++)
-            {
-                Tarea tarea = new Tarea();
-
-                tarea.TareaId = i + 1;
-
-                Console.WriteLine($"Ingrese la descripción de la tarea {i + 1}: ");
-                tarea.Descripcion = Console.ReadLine();
-
-                Console.WriteLine("Ingrese la duración de la tarea (entre 10 y 100): ");
-                tarea.Duracion = Convert.ToInt32(Console.ReadLine());
-
-                listaTareas.Add(tarea);
-            }
-
-            Console.WriteLine("Tareas realizadas:");
             List<Tarea> tareasRealizadas = new List<Tarea>();
 
-            foreach (Tarea tarea in listaTareas)
+            while (tareasPendientes.Count > 0)
             {
-                Console.WriteLine($"¿Se realizó la tarea {tarea.TareaId}? (s/n):");
-                char respuesta = Console.ReadKey().KeyChar;
-                Console.WriteLine();
+                Console.WriteLine("\n------ Mover Tareas ------");
+                Console.WriteLine("Ingrese el número de la tarea que desea mover (0 para salir):");
+                MostrarTareas(tareasPendientes);
 
-                if (respuesta == 's')
+                int opcion = Convert.ToInt32(Console.ReadLine());
+
+                if (opcion == 0)
+                    break;
+
+                Tarea tarea = BuscarTareaPorId(opcion, tareasPendientes);
+
+                if (tarea != null)
                 {
-                    tareasRealizadas.Add(tarea);
+                    MoverTarea(tarea, tareasPendientes, tareasRealizadas);
+                    Console.WriteLine($"La tarea {tarea.TareaId} ha sido movida a Tareas Realizadas.");
+                }
+                else
+                {
+                    Console.WriteLine("¡Opción inválida! Intente nuevamente.");
                 }
             }
 
-            Console.WriteLine("Tareas pendientes:");
+            Console.WriteLine("\n------ Tareas Realizadas ------");
+            MostrarTareas(tareasRealizadas);
+
+            Console.WriteLine("\n------ Buscar Tareas Pendientes ------");
+            Console.WriteLine("Ingrese una descripción para buscar tareas (0 para salir):");
+
+            string descripcion = Console.ReadLine();
+
+            while (descripcion != "0")
+            {
+                List<Tarea> tareasEncontradas = BuscarTareasPorDescripcion(descripcion, tareasPendientes);
+
+                if (tareasEncontradas.Count > 0)
+                {
+                    Console.WriteLine($"\nSe encontraron {tareasEncontradas.Count} tareas con la descripción '{descripcion}':");
+                    MostrarTareas(tareasEncontradas);
+                }
+                else
+                {
+                    Console.WriteLine("No se encontraron tareas con esa descripción.");
+                }
+
+                Console.WriteLine("\nIngrese una descripción para buscar tareas (0 para salir):");
+                descripcion = Console.ReadLine();
+            }
+
+            int totalDuracion = CalcularDuracionTotal(tareasRealizadas);
+            GuardarSumarioHorasTrabajadas(totalDuracion);
+
+            Console.WriteLine("\nSumario de horas trabajadas guardado en el archivo 'sumario_horas.txt'");
+        }
+
+        static List<Tarea> GenerarTareasPendientes(int cantidad)
+        {
             List<Tarea> tareasPendientes = new List<Tarea>();
 
-            foreach (Tarea tarea in listaTareas)
+            Random random = new Random();
+
+            for (int i = 1; i <= cantidad; i++)
             {
-                if (!tareasRealizadas.Contains(tarea))
-                {
-                    tareasPendientes.Add(tarea);
-                }
+                Tarea tarea = new Tarea();
+                tarea.TareaId = i;
+                tarea.Descripcion = $"Tarea {i}";
+                tarea.Duracion = random.Next(10, 101);
+                tareasPendientes.Add(tarea);
             }
 
-            Console.WriteLine("Tareas realizadas:");
-            foreach (Tarea tarea in tareasRealizadas)
+            return tareasPendientes;
+        }
+
+        static void MostrarTareas(List<Tarea> tareas)
+        {
+            foreach (Tarea tarea in tareas)
             {
-                Console.WriteLine($"Tarea {tarea.TareaId}:");
-                Console.WriteLine($"Descripción: {tarea.Descripcion}");
-                Console.WriteLine($"Duración: {tarea.Duracion}");
-            }
-
-            Console.WriteLine("Tareas pendientes:");
-            foreach (Tarea tarea in tareasPendientes)
-            {
-                Console.WriteLine($"Tarea {tarea.TareaId}:");
-                Console.WriteLine($"Descripción: {tarea.Descripcion}");
-                Console.WriteLine($"Duración: {tarea.Duracion}");
-            }
-
-            Console.WriteLine("Ingrese el número de id de la tarea a buscar:");
-            int id = Convert.ToInt32(Console.ReadLine());
-
-            Tarea tareaPorId = BuscarTareaPorId(id, listaTareas);
-
-            if (tareaPorId != null)
-            {
-                Console.WriteLine("Tarea encontrada:");
-                Console.WriteLine($"Tarea {tareaPorId.TareaId}:");
-                Console.WriteLine($"Descripción: {tareaPorId.Descripcion}");
-                Console.WriteLine($"Duración: {tareaPorId.Duracion}");
-            }
-            else
-            {
-                Console.WriteLine($"No se encontró la tarea con el número de id {id}");
-            }
-
-            Console.WriteLine("Ingrese una palabra a buscar:");
-            string palabra = Console.ReadLine();
-
-            Tarea tareaPorPalabra = BuscarTareaPorPalabra(palabra, listaTareas);
-
-            if (tareaPorPalabra != null)
-            {
-                Console.WriteLine("Tarea encontrada:");
-                Console.WriteLine($"Tarea {tareaPorPalabra.TareaId}:");
-                Console.WriteLine($"Descripción: {tareaPorPalabra.Descripcion}");
-                Console.WriteLine($"Duración: {tareaPorPalabra.Duracion}");
-            }
-            else
-            {
-                Console.WriteLine($"No se encontró la tarea con la palabra {palabra}");
+                Console.WriteLine($"Tarea {tarea.TareaId}: {tarea.Descripcion} (Duración: {tarea.Duracion})");
             }
         }
 
-        static Tarea BuscarTareaPorId(int id, List<Tarea> listaTareas)
+        static Tarea BuscarTareaPorId(int id, List<Tarea> tareas)
         {
-            return listaTareas.Find(t => t.TareaId == id);
+            return tareas.Find(t => t.TareaId == id);
         }
 
-        static Tarea BuscarTareaPorPalabra(string palabra, List<Tarea> listaTareas)
+        static void MoverTarea(Tarea tarea, List<Tarea> listaOrigen, List<Tarea> listaDestino)
         {
-            return listaTareas.Find(t => t.Descripcion.Contains(palabra));
+            listaOrigen.Remove(tarea);
+            listaDestino.Add(tarea);
+        }
+
+        static List<Tarea> BuscarTareasPorDescripcion(string descripcion, List<Tarea> tareas)
+        {
+            return tareas.FindAll(t => t.Descripcion.Contains(descripcion));
+        }
+
+        static int CalcularDuracionTotal(List<Tarea> tareas)
+        {
+            int duracionTotal = 0;
+
+            foreach (Tarea tarea in tareas)
+            {
+                duracionTotal += tarea.Duracion;
+            }
+
+            return duracionTotal;
+        }
+
+        static void GuardarSumarioHorasTrabajadas(int duracionTotal)
+        {
+            using (StreamWriter writer = new StreamWriter("sumario_horas.txt"))
+            {
+                writer.WriteLine("Sumario de horas trabajadas");
+                writer.WriteLine("---------------------------");
+                writer.WriteLine($"Duración total: {duracionTotal} horas");
+            }
         }
     }
 }
+
 
 
 
