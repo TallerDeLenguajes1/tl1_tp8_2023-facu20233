@@ -144,6 +144,18 @@ namespace TareasApp
     }
 }
 
+//         static void GuardarSumarioHorasTrabajadas(int duracionTotal)
+//         {
+//             using (StreamWriter writer = new StreamWriter("sumario_horas.txt"))
+//             {
+//                 writer.WriteLine("Sumario de horas trabajadas");
+//                 writer.WriteLine("---------------------------");
+//                 writer.WriteLine($"Duración total: {duracionTotal} horas");
+//             }
+//         }
+//     }
+// }
+
 
 
 
